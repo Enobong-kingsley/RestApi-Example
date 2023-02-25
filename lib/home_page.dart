@@ -49,8 +49,8 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Text(_userModel![index].id.toString()),
-                          Text(_userModel![index].title),
-                          Text(_userModel![index].body),
+                          Text(_userModel![index].firstName),
+                          Text(_userModel![index].lastName),
                         ],
                       ),
                       const SizedBox(
