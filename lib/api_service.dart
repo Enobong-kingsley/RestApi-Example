@@ -1,33 +1,43 @@
 import 'dart:convert';
-
-import 'package:rest_api_example/api_constants.dart';
-import 'package:rest_api_example/user_model.dart';
-import 'package:http/http.dart' as http;
 import 'dart:developer';
 
+import 'package:http/http.dart' as http;
+import 'package:rest_api_example/user_model.dart';
+
 class ApiService {
-//   void UserModel() async {
-//     var urlString = await http.get(Uri.https("random-data-api.com", "users"));
-//     if (urlString.statusCode == 200) {
-//       var model = jsonDecode(urlString.body);
-//       print(model)
-//     }
-//   }
-
-  Future<List<UserModel>?> getUsers() async {
+  Future<List<UserModel>> getUsers() async {
     try {
-      var urlString = await http.get(Uri.https("random-data-api.com", "users"));
-
-      //var response = await http.get(url);
-      if (urlString.statusCode == 200) {
-        var model = jsonDecode(urlString.body);
-        print(model);
-
-        //List<UserModel> _model = UserModelFromJson(response.body);
-        //return _model;
-      }
+      final response =
+          await http.get(Uri.https("random-data-api.com", "api/v2/users"));
+      return [UserModelFromJson(response.body)];
     } catch (e) {
-      log(e.toString());
+      log("exception caught from fetching users is ${e.toString()}");
+      throw UsersNotFoundException(
+          "failed to fetch user data at this time, please try again later");
     }
+  }
+}
+
+class UsersNotFoundException implements Exception {
+  final String exception;
+
+  UsersNotFoundException(this.exception);
+}
+
+// Something for more advanced cases
+class ApiResponseWrapper<T> {
+  final bool isLoading;
+  final T? data;
+  final String? errorMessage;
+
+  ApiResponseWrapper({this.isLoading = false, this.data, this.errorMessage});
+
+  ApiResponseWrapper<T> copyWith(
+      {bool? isLoading, T? data, String? errorMessage}) {
+    return ApiResponseWrapper(
+      isLoading: isLoading ?? this.isLoading,
+      data: data ?? this.data,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
   }
 }
