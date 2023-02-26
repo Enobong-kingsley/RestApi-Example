@@ -12,20 +12,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late List<UserModel>? _userModel = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _getData();
-  }
-
-  void _getData() async {
-    _userModel = (await ApiService().getUsers())!;
-    Future.delayed(const Duration(seconds: 1)).then((value) => setState(
-          () {},
-        ));
-  }
+  final _userFuture = ApiService().getUsers();
 
   @override
   Widget build(BuildContext context) {
@@ -34,39 +21,28 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('REST API EXAMPLE'),
       ),
-      body: _userModel == null || _userModel!.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              itemCount: _userModel!.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  elevation: 0,
-                  child: Column(
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Text(_userModel![index].id.toString()),
-                          Text(_userModel![index].firstName),
-                          Text(_userModel![index].lastName),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 20.0,
-                      ),
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //   children: [
-                      //     Text(_userModel![index].email),
-                      //     Text(_userModel![index].website),
-                      //   ],
-                      // )
-                    ],
-                  ),
-                );
-              }),
+      body: FutureBuilder<List<UserModel>>(
+        future: _userFuture,
+        initialData: const [],
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            if (snapshot.error is UsersNotFoundException) {
+              return Text((snapshot.error as UsersNotFoundException).exception);
+            }
+            return const Text("Sorry looks like you took a wrong turn");
+          } else {
+            final user = snapshot.data!.first;
+            return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (_, index) {
+                return Center(child: Text(user.email));
+              },
+            );
+          }
+        },
+      ),
     );
   }
 }
